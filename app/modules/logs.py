@@ -5,7 +5,7 @@ from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 import pandas as pd
 from app.filters.logs import *
-from app.models.logs import FilterLogs
+from app.models.logs import FilterLogs, Logs
 
 data_path = ''
 
@@ -54,7 +54,7 @@ def insert_logs(file: UploadFile):
     # We get back the extension of the file
     extension = os.path.splitext(file.filename)[1]
 
-    # Depending of the extension we get, we read the content with different methods
+    # Depending on the extension we get, we read the content with different methods
     if extension in ('json', 'yml'):
         data = read_log_json(file)
     elif extension == "yml":
@@ -68,30 +68,44 @@ def insert_logs(file: UploadFile):
     return {"message": "File treated"}
 
 
-def update_data_output(data):
+def update_data_output(data: List[Logs]):
     """
+    """
+    # We check if the data file already exists or not
+    if os.path.isfile(data_path):
+        df = pd.read_csv(data_path)
+    else:
+        df = pd.DataFrame()
 
+    # We create our new Pandas dataframe
+    new_df = pd.DataFrame(data)
+
+    # We make the concatenation of the both dataframes
+    df_concat = pd.concat([df, new_df], ignore_index=True)
+
+    if len(df_concat) > 500:
+        return JSONResponse(status_code=404, content={"message": "Too many logs saved"})
+
+    # We save it to a csv file
+    df_concat.to_csv(data_path, index=False)
+
+
+def read_log_json(file: UploadFile) -> List[Logs]:
     """
+    """
+    # We get back the content of the file
+    file_content = await file.read()
+    data = json.loads(file_content)
     return data
 
 
-def read_log_json(file: UploadFile):
+def read_log_yml(file: UploadFile) -> List[Logs]:
     """
-
-    """
-    # We get back the content of the file
-    file_content = await file.read()
-    return file
-
-
-def read_log_yml(file: UploadFile):
-    """
-
-
     """
     # We get back the content of the file
     file_content = await file.read()
-    return file
+    data = yaml.safe_load(file_content)
+    return data
 
 
 def erase_logs():
