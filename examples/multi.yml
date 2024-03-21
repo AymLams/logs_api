@@ -1,0 +1,22 @@
+uid: 4a4f968a-102a-1006-80e4-6f312e703235
+ip: 192.168.33.12
+size: 64
+time: 2011-12-04T20:01:00
+allow: True
+type: [phishing]
+---
+uid: "bd22d809-e65a-43dd-868a-1871ec7a3ed2"
+ip: "101.102.103.0"
+size: 12
+time: 2011-12-04T20:02:11
+allow: True
+type: []
+---
+uid: da75561a-9879-48a4-98c2-5aedb2c582d8
+ip: 132.10.27.3
+size: 42
+time: 2010-12-09T01:01:24
+allow: False
+type:
+  - malware
+  - c2

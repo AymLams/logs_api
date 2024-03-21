@@ -1,0 +1,6 @@
+{
+  "data_folder": "str",
+  "max_file_size": "int",
+  "api_address": "str",
+  "api_port": "int"
+}

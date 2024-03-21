@@ -1,0 +1,8 @@
+uid: 4a4f968a-102a-1006-80e4-6f312e703235
+ip: 127.0.0.1
+size: 10
+time: 2011-11-04T00:05:23
+allow: True
+type:
+  - phishing
+  - malware
