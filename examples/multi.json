@@ -8,6 +8,6 @@
   "allow": false,
   "type": [
     "malware",
-    "c2",
+    "c2"
   ]
 }

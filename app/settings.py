@@ -11,5 +11,3 @@ class Settings(BaseSettings):
     class Config:
         env_file = "config.json"
 
-
-settings = Settings()

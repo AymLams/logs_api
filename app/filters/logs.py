@@ -1,7 +1,10 @@
-from app.models.utils import DataFrameField
+#from models.utils import DataFrameField
 from datetime import datetime
 from typing import List
 import ipaddress
+
+import pandas as pd
+from pandas import DataFrame
 
 
 def is_private_ip(ip: str) -> bool:
@@ -13,7 +16,7 @@ def is_private_ip(ip: str) -> bool:
     return ip_obj.is_private
 
 
-def filter_ip(df: DataFrameField, value: str):
+def filter_ip(df: DataFrame, value: str):
     """
     Function to filter the IP depending on the value selected
     """
@@ -24,22 +27,30 @@ def filter_ip(df: DataFrameField, value: str):
         return df[~df['ip'].apply(is_private_ip)]
 
 
-def filter_before_time(df: DataFrameField, value: datetime):
+def filter_before_time(df: DataFrame, value: datetime):
     """
 
     """
+    df['time'] = pd.to_datetime(df['time'])
+    print(df.dtypes)
+    print(type(value))
     return df[df['time'] < value]
 
 
-def filter_after_time(df: DataFrameField, value: datetime):
+def filter_after_time(df: DataFrame, value: datetime):
     """
 
     """
+
+    df['time'] = pd.to_datetime(df['time'])
+    print(df.dtypes)
+    print(type(value))
     return df[df['time'] > value]
 
 
-def filter_type(df: DataFrameField, value: List[str]):
+def filter_type(df: DataFrame, value: List[str]):
     """
     """
-    return df[df['type'].isin(value)]
+    # We apply a lambda to check if at least one of the value we want to filter in is part of the list
+    return df[df['type'].apply(lambda x: any(item in x for item in value))]
 
