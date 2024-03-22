@@ -1,0 +1,3 @@
+<164>2 2011-12-04T20:01:00 192.168.33.12 LOG - [5a2cddd5-b661-4cf3-9466-2265886525fd] - size:64 allow:true type:phishing
+<100>1 2011-12-04T20:02:11 101.102.103.0 LOG - [bd22d809-e65a-43dd-868a-1871ec7a3ed2] - allow:true size:12
+<1>1 2010-12-09T01:01:24 132.10.27.3 LOG - [da75561a-9879-48a4-98c2-5aedb2c582d8] - type:malware allow:true size:12 type:c2
