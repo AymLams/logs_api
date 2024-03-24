@@ -1,19 +1,28 @@
-import json
 import logging
 import os
+import json
 import yaml
-from datetime import datetime
 
-import pandas as pd
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from ast import literal_eval
 
 from filters.logs import *
 from models.logs import FilterLogs, Logs
+from settings import settings
+from utils import format_csv, format_xml, format_yml, format_json
 
-data_folder = '/Users/lams/Documents/Dev/logs_api/data_folder'
+# We set the name of the data file and create the Data Path with the setting
 DATA_FILENAME = "data.csv"
-data_path = os.path.join(data_folder, DATA_FILENAME)
+DATA_PATH = os.path.join(settings.data_folder, DATA_FILENAME)
+
+# Variable to lead the output format
+LOG_FORMATTING = {
+    "JSON": format_json,
+    "YML": format_yml,
+    "XML": format_xml,
+    "CSV": format_csv
+}
 
 # We set a dict of filters in order to launch them depending on the parameters we have
 FILTERS = {
@@ -31,37 +40,30 @@ def get_filtered_logs(params: FilterLogs):
 
     # We get back the pandas dataframe from our csv file
     try:
-        df = pd.read_csv(data_path)
+        df = pd.read_csv(DATA_PATH)
     except Exception as e:
         raise HTTPException(status_code=404, detail="Data not available")
 
     # We filter our dataframe with the parameters
     df_filter = filter_logs(df, params)
 
-    print(df_filter)
-    #formated_data, format_type = format_data(params["log_format"], df_filter)
+    df_filter['type'] = df_filter['type'].apply(literal_eval)
+    # We return our data by formatting it with the adapted log_format
+    return format_data(df_filter, params.log_format)
 
-    return {"message": "Hello World"}
 
-
-def format_data(log_format: str, df):
+def format_data(df: pd.DataFrame, log_format: str):
     """
     Function to format our data depending on the type of output they want
     """
-    if log_format == "CSV":
-        return False, False
-    elif log_format == "JSON":
-        return False, False
-    else:
-        return False, False
+    # From the variable LOG FORMATTING we return the right function
+    return LOG_FORMATTING[log_format](df)
 
 
 def filter_logs(df, params: FilterLogs):
     """
     Method to filter the dataframe of logs depending on the parameters we get back from the query
-
     """
-    print(params)
     # We go through all the parameters we get in the query
     for param, value in params.__dict__.items():
         # We check if the param is in the key list of FILTERS
@@ -73,7 +75,7 @@ def filter_logs(df, params: FilterLogs):
 
 def insert_logs(file_content: str, file_extension: str):
     """
-
+    Method to insert logs into our Data Folder
     """
     # Depending on the extension we get, we read the content with different methods
     if file_extension == ".json":
@@ -83,45 +85,44 @@ def insert_logs(file_content: str, file_extension: str):
     else:
         return JSONResponse(status_code=400, content={"message": "Invalid file format."})
 
+    print("NOTRE DATA RESSEMBLE A QUOI ???")
+    print(data)
+
     # We update our output data depending on the content of the file
     update_data_output(data)
 
-    return {"message": "File treated"}
+    return {"message": "File inserted."}
 
 
 def update_data_output(data: List[Logs]):
     """
+    Method to update the CSV we saved or initiate in the Data Folder
     """
     # We check if the data file already exists or not
-    if os.path.isfile(data_path):
-        df = pd.read_csv(data_path)
+    if os.path.isfile(DATA_PATH):
+        df = pd.read_csv(DATA_PATH)
     else:
         df = pd.DataFrame()
 
     # We create our new Pandas dataframe
     new_df = pd.json_normalize(data)
+    # We update the format of the dataframe per a datetime one
+    new_df['time'] = pd.to_datetime(new_df['time'])
 
     # We make the concatenation of the both dataframes
     df_concat = pd.concat([df, new_df], ignore_index=True)
 
-    if len(df_concat) > 500:
+    # We check if we have too many logs already or not
+    if len(df_concat) > settings.max_file_size:
         return JSONResponse(status_code=404, content={"message": "Too many logs saved"})
 
     # We save it to a csv file
-    df_concat.to_csv(data_path, index=False)
-
-
-def date_hook(json_dict):
-    for (key, value) in json_dict.items():
-        try:
-            json_dict[key] = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
-        except Exception as e:
-            pass
-    return json_dict
+    df_concat.to_csv(DATA_PATH, index=False)
 
 
 def read_log_json(file_content: str) -> List[Logs]:
     """
+    Method to read a log file in the format of JSON
     """
     # We initialize our output data
     data = []
@@ -135,9 +136,10 @@ def read_log_json(file_content: str) -> List[Logs]:
 
     # We try to transform each different Json in order to add them to our Data Base
     try:
-        # We go through all splitted content and we add them to our data
+        # We go through all split content, and we add them to our data
+        #### A FAIRE : MIEUX GERER LES DONNES TEMPORELLES
         for content in split_content:
-            data.append(json.loads(content, object_hook=date_hook))
+            data.append(json.loads(content))  # , object_hook=date_hook
     except Exception as e:
         logging.error(e)
         raise HTTPException(status_code=404, detail='Wrong format of data.')
@@ -147,6 +149,7 @@ def read_log_json(file_content: str) -> List[Logs]:
 
 def read_log_yml(file_content: str) -> List[Logs]:
     """
+    Method to read a log file in the format of YAML
     """
     # We initialize our output data
     data = []
@@ -171,7 +174,7 @@ def erase_logs():
     """
     # We read the csv file to get the count of lines
     try:
-        with open(data_path) as f:
+        with open(DATA_PATH) as f:
             # We make the count of row in the CSV minus 1 to deal with the header
             count = sum(1 for line in f) - 1
     except FileNotFoundError:
@@ -179,6 +182,6 @@ def erase_logs():
 
     # We remove the file from the system
     # Another possibility was to delete all rows from the file, here we just delete it
-    os.remove(data_path)
+    os.remove(DATA_PATH)
 
     return {"message": f"{count} lines removed from the data folder."}

@@ -1,10 +1,8 @@
-#from models.utils import DataFrameField
+import ipaddress
+import pandas as pd
+
 from datetime import datetime
 from typing import List
-import ipaddress
-
-import pandas as pd
-from pandas import DataFrame
 
 
 def is_private_ip(ip: str) -> bool:
@@ -16,7 +14,7 @@ def is_private_ip(ip: str) -> bool:
     return ip_obj.is_private
 
 
-def filter_ip(df: DataFrame, value: str):
+def filter_ip(df: pd.DataFrame, value: str):
     """
     Function to filter the IP depending on the value selected
     """
@@ -27,29 +25,31 @@ def filter_ip(df: DataFrame, value: str):
         return df[~df['ip'].apply(is_private_ip)]
 
 
-def filter_before_time(df: DataFrame, value: datetime):
+def filter_before_time(df: pd.DataFrame, value: datetime):
     """
-
+    Method to filter our data and get all logs before the time indicated
     """
+    # We transform the time column into a datetime format
     df['time'] = pd.to_datetime(df['time'])
-    print(df.dtypes)
-    print(type(value))
+
+    # We filter
     return df[df['time'] < value]
 
 
-def filter_after_time(df: DataFrame, value: datetime):
+def filter_after_time(df: pd.DataFrame, value: datetime):
     """
-
+    Method to filter our data and get all logs after the time indicated
     """
-
+    # We transform the time column into a datetime format
     df['time'] = pd.to_datetime(df['time'])
-    print(df.dtypes)
-    print(type(value))
+
+    # We filter
     return df[df['time'] > value]
 
 
-def filter_type(df: DataFrame, value: List[str]):
+def filter_type(df: pd.DataFrame, value: List[str]):
     """
+    Method to filter our Dataframe on the type column with a list of log type
     """
     # We apply a lambda to check if at least one of the value we want to filter in is part of the list
     return df[df['type'].apply(lambda x: any(item in x for item in value))]

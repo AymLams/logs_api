@@ -15,7 +15,7 @@ class Logs(BaseModel):
 
 # Class for the creation of the logs
 class CreateLogs(BaseModel):
-    log_format: Literal['JSON', 'YAML']
+    log_format: Literal['JSON', 'YML']
 
 
 # Class to deal with the logs we will filter
@@ -24,7 +24,7 @@ class FilterLogs(BaseModel):
     before_time: Optional[datetime] = None
     after_time: Optional[datetime] = None
     type: Optional[List[Literal['phishing', 'malware', 'exploit', 'c2', 'spam']]] = None
-    log_format: Literal['JSON', 'CSV', 'YAML']
+    log_format: Literal['JSON', 'XML', 'CSV', 'YML']
 
 
 # Class to delete logs

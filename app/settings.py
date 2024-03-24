@@ -9,5 +9,7 @@ class Settings(BaseSettings):
     api_port: int
 
     class Config:
-        env_file = "config.json"
+        pass
 
+
+settings = Settings.parse_file("config.json")
