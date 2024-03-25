@@ -2,11 +2,11 @@ import uvicorn
 import os
 import logging
 
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Request
 
-from modules.logs import get_filtered_logs, erase_logs, insert_logs
-from models.logs import FilterLogs
-from settings import settings
+from app.modules.logs import get_filtered_logs, erase_logs, insert_logs
+from app.models.logs import FilterLogs
+from app.settings import get_settings
 
 
 # We set our app
@@ -15,7 +15,7 @@ app = FastAPI()
 
 # The GET API using the filter from params
 @app.get("/logs/")
-async def get_logs(query_params: FilterLogs):
+async def get_logs(request: Request, query_params: FilterLogs):
     # We get back the parameters from the query in order to make the filter
     logging.info("Getting logs from the data folder")
     return get_filtered_logs(query_params)
@@ -43,4 +43,5 @@ async def delete_logs():
 
 
 if __name__ == "__main__":
+    settings = get_settings()
     uvicorn.run(app, host=settings.api_address, port=settings.api_port)

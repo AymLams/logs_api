@@ -7,14 +7,16 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from ast import literal_eval
 
-from filters.logs import *
-from models.logs import FilterLogs, Logs
-from settings import settings
-from utils import format_csv, format_xml, format_yml, format_json
+from ..filters.logs import *
+from ..models.logs import FilterLogs, Logs
+from ..settings import get_settings
+from ..utils import format_csv, format_xml, format_yml, format_json
+
+settings = get_settings()
+
 
 # We set the name of the data file and create the Data Path with the setting
 DATA_FILENAME = "data.csv"
-DATA_PATH = os.path.join(settings.data_folder, DATA_FILENAME)
 
 # Variable to lead the output format
 LOG_FORMATTING = {
@@ -37,10 +39,10 @@ def get_filtered_logs(params: FilterLogs):
     """
     Method to get the content of the data from our data
     """
-
+    data_path = os.path.join(settings.data_folder, DATA_FILENAME)
     # We get back the pandas dataframe from our csv file
     try:
-        df = pd.read_csv(DATA_PATH)
+        df = pd.read_csv(data_path)
     except Exception as e:
         raise HTTPException(status_code=404, detail="Data not available")
 
@@ -85,9 +87,6 @@ def insert_logs(file_content: str, file_extension: str):
     else:
         return JSONResponse(status_code=400, content={"message": "Invalid file format."})
 
-    print("NOTRE DATA RESSEMBLE A QUOI ???")
-    print(data)
-
     # We update our output data depending on the content of the file
     update_data_output(data)
 
@@ -98,10 +97,14 @@ def update_data_output(data: List[Logs]):
     """
     Method to update the CSV we saved or initiate in the Data Folder
     """
+    data_path = os.path.join(settings.data_folder, DATA_FILENAME)
     # We check if the data file already exists or not
-    if os.path.isfile(DATA_PATH):
-        df = pd.read_csv(DATA_PATH)
+    if os.path.isfile(data_path):
+        df = pd.read_csv(data_path)
     else:
+        if not os.path.exists(settings.data_folder):
+            os.mkdir(settings.data_folder)
+
         df = pd.DataFrame()
 
     # We create our new Pandas dataframe
@@ -114,10 +117,10 @@ def update_data_output(data: List[Logs]):
 
     # We check if we have too many logs already or not
     if len(df_concat) > settings.max_file_size:
-        return JSONResponse(status_code=404, content={"message": "Too many logs saved"})
+        raise HTTPException(status_code=403, detail={"message": "Too many logs saved."})
 
     # We save it to a csv file
-    df_concat.to_csv(DATA_PATH, index=False)
+    df_concat.to_csv(data_path, index=False)
 
 
 def read_log_json(file_content: str) -> List[Logs]:
@@ -137,12 +140,11 @@ def read_log_json(file_content: str) -> List[Logs]:
     # We try to transform each different Json in order to add them to our Data Base
     try:
         # We go through all split content, and we add them to our data
-        #### A FAIRE : MIEUX GERER LES DONNES TEMPORELLES
         for content in split_content:
-            data.append(json.loads(content))  # , object_hook=date_hook
+            data.append(json.loads(content))
     except Exception as e:
         logging.error(e)
-        raise HTTPException(status_code=404, detail='Wrong format of data.')
+        raise HTTPException(status_code=400, detail='Wrong format of data.')
 
     return data
 
@@ -163,7 +165,7 @@ def read_log_yml(file_content: str) -> List[Logs]:
             data.append(yaml.safe_load(content))
     except Exception as e:
         logging.error(e)
-        raise HTTPException(status_code=404, detail='Wrong format of data.')
+        raise HTTPException(status_code=400, detail='Wrong format of data.')
 
     return data
 
@@ -172,9 +174,10 @@ def erase_logs():
     """
     Function to delete the file of data.
     """
+    data_path = os.path.join(settings.data_folder, DATA_FILENAME)
     # We read the csv file to get the count of lines
     try:
-        with open(DATA_PATH) as f:
+        with open(data_path) as f:
             # We make the count of row in the CSV minus 1 to deal with the header
             count = sum(1 for line in f) - 1
     except FileNotFoundError:
@@ -182,6 +185,6 @@ def erase_logs():
 
     # We remove the file from the system
     # Another possibility was to delete all rows from the file, here we just delete it
-    os.remove(DATA_PATH)
+    os.remove(data_path)
 
-    return {"message": f"{count} lines removed from the data folder."}
+    return {"count": count, "message": f"Lines removed from the data folder."}
