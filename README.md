@@ -1,23 +1,10 @@
-# Test Technique - SIEM
-
-## Conditions de réalisation
-
-* Candidat: Developpeur Python
-* Durée: ∼4h
-* Temps de réalisation: 72h
-* Langage: Python 3.11 ou supérieur (https://www.python.org/)
-* Framework: FastAPI (https://fastapi.tiangolo.com/)
-* Langue: Anglais
-
-La durée notée ne représente ni une durée réelle du test, ni une borne maximale de temps, elle correspond a une estimation du temps que l'on attend du candidat pour réaliser le plus possible de développement.
+# Learning FastAPI
 
 ## Besoin fonctionnel
 
 On souhaite implémenter un service permettant la manipulation de logs de formats différents.
 
 L'API, développée en `Python`, permettra de stocker des logs, de les consulter ou de les supprimer selon différents critères de filtrage.
-
-TEHTRIS a besoin de vous pour mettre en place cette fonctionnalité de bout en bout.
 
 ## Spécifications techniques
 
@@ -131,117 +118,6 @@ L'API possède trois méthodes distinctes à implémenter:
 
 * La méthode ne prend aucun paramètre et permet d'effectuer un reset pour rétablir l'état initial, c'est à dire, tout supprimer
 * En plus de supprimer les logs, on souhaiterait que la méthode retourne le nombre de logs supprimés
-
-Dans ce projet, l'authentification n'est pas a gérer.
-
-### Configuration
-
-Le code doit être configurable via un fichier de configuration `config.json`, contenant les variables suivantes:
-
-```plaintext
-data_folder: str # chemin du dossier qui contiendra les logs analysés par le service
-max_file_size: int # nombre de log max accepté par fichier de log
-api_address: str # API IP
-api_port: int # API port
-```
-
-Le candidat peut ajouter des variables au fichier de configuration à condition que ces variables soient optionnelles pour l'exécution du programme.
-
-## Bonus
-
-Les bonus sont optionnels et requiert un temps de développement supplémentaire non négligeable. Ils sont à implémenter à l'appréciation du candidat et leur non implémentation ne rentrera pas en compte dans l'évaluation finale de l'exercice.
-
-A défaut d'implémentation, vous pourrez évoquer vos idées de mise en oeuvre lors de l'entretien de restitution.
-
-### Bonus 1
-
-On souhaite compléter la méthode GET à l'aide de nouveaux filtres répondant aux critères suivants:
-
-* `uid`: Filtre le log dont l'`uid` est renseigné, le filtre est case sensitive
-* `max_size`: filtre les logs dont le champ `size` est \< `max_size`
-* `min_size`: filtre les logs dont le champ `size` est \> `min_size`
-* `allow`: Filtre le log selon la valeur du champ `allow`
-
-On rappelle que tous les filtres sont optionnels lors d'une recherche.
-
-### Bonus 2
-
-Proposez une implémentation pour pouvoir ingérer les logs autrement que par la méthode `POST` en passant par une Websocket.
-
-### Bonus 3
-
-Un troisième format de log s'est ajouté à la grammaire. Il s'agit du format `TEHTRIS`, dont les logs sont stockés dans des fichiers d'extension `.log`, et dont le format est le suivant:
-
-```plaintext
-<165>1 2022-01-13T15:35:11 127.0.0.1 LOG - [4a4f968a-102a-1006-80e4-6f312e703235] - size:10 allow:true type:phishing type:malware
-```
-
-Le format `TEHTRIS` suit une RFC syslog approximative, dont le pattern correspond au format suivant:
-
-```plaintext
-<PRIORITY>VERSION %time% %ip% LOG - [%uid%] - MESSAGE
-```
-
-Où `MESSAGE` correspond à l'ensemble des paires clef/valeur manquantes:
-
-```plaintext
-size:%size% allow:%allow% type:%type%
-```
-
-L'odre des paires clef/valeur du champ `MESSAGE` n'est pas forcément celui affiché ci-dessus. En dehors du champ `MESSAGE`, l'ordre des champs est fixe. Les séparateurs clef/valeur sont des `:` et les séparateurs paires de clef/valeur sont des espaces.
-
-Pour le champ `type`, s'il y a plusieurs valeurs, la clef peut apparaître plusieurs fois.
-
-La priorité par défaut est 165 et la version par défaut est 1. De manière générale, ces deux champs sont toujours présent dans les logs format `TEHTRIS` et sont maintenant optionnels dans les logs format `JSON` et `YAML`.
-
-On souhaite que ce format de log soit maintenant compatible avec l'API. Cela implique qu'il faut modifier les routes `GET` et `POST` en conséquence.
-
-## Fichiers fournis au candidat
-
-* `README.md`: un fichier contenant les instructions du test
-* `config.json`: un fichier contenant des variables configurables à utiliser
-* `examples/`: un dossier contenant un ensemble de fichiers de logs exemples
-  * `single.json`: un fichier contenant un log au format JSON
-  * `single.yml` : un fichier contenant un log au format YAML
-  * `single.log` : un fichier contenant un log au format TEHTRIS
-  * `multi.json`: un fichier contenant plusieurs logs au format JSON
-  * `multi.yml` : un fichier contenant plusieurs logs au format YAML
-  * `multi.log` : un fichier contenant plusieurs logs au format TEHTRIS
-
-## Livrables
-
-Il est attendu du candidat de fournir l'ensemble des livrables suivants au sein d'une archive `technical_test.tgz` contenant:
-
-* Un fichier de `requirements.txt` contenant toutes les dépendances
-* Un ou plusieurs fichiers de code en Python répondant aux spécifications techniques
-* Un ou plusieurs fichiers de code contenant un ensemble de tests unitaires de l'application
-* Un ou plusieurs fichiers de documentation
-
-### Exécution
-
-Attention, le rendu sera testé automatiquement ! Veillez à ce que les commandes suivantes puissent s'éxecuter sur votre rendu:
-
-```bash
-tar -xzf technical_test.tgz
-cd technical_test/
-python3 -m pip install -r requirements.txt
-python3 src/bin/main.py -c /PATH/TO/config.json
-```
-
-## Critères d'évaluation
-
-Le candidat sera évalué sur les critères suivants:
-
-* Sa capacité à implémenter une API en Python
-* Sa capacité à produire du code optimisé
-* Sa capacité à utiliser les bibliothèques adéquates
-* Sa capacité à tester son code
-* Sa capacité à documenter ses productions
-
-Il n’y a pas de bonne ou de mauvaise implémentation, l'attention sera portée tant sur le fond que la forme et la capacité du candidat à défendre ses choix techniques.
-
-## Entretien de restitution
-
 A la suite du test, le candidat sera reçu lors d'un entretien de restitution où il devra présenter son code, ainsi que l'ensemble de ses choix techniques. Ces choix techniques seront débattu avec l'ensemble de l'équipe technique présente côté TEHTRIS.
 
 Il sera demandé au candidat le temps réel passé sur le test.
